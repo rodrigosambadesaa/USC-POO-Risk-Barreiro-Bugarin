@@ -9,23 +9,25 @@ permissions:
 
 jobs:
   verify:
+    env:
+      MAVEN_OPTS: -Dfile.encoding=UTF-8
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-2025]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
       - name: Maven verify (UTF-8)
-        run: mvn -B -Dfile.encoding=UTF-8 clean verify
+        run: mvn -B clean verify
       - name: Publish coverage report
         if: matrix.os == 'ubuntu-24.04'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: jacoco-report
           path: target/site/jacoco
@@ -33,12 +35,12 @@ jobs:
   docker:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build runtime image
         run: docker build --target runtime --tag usc-risk:ci .
       - name: CLI smoke test
         run: |
-          mkdir -p docker-output
+          install -d -m 0777 docker-output
           docker run --rm -v "$PWD/docker-output:/app/output" usc-risk:ci
           grep -q '^EOF$' docker-output/resultados.txt
       - name: Verify test service
