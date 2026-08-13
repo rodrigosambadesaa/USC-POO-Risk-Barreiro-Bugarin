@@ -1,0 +1,39 @@
+package gal.sdc.usc.risk.comandos.generico;
+
+import gal.sdc.usc.risk.comandos.Comando;
+import gal.sdc.usc.risk.comandos.Comandos;
+import gal.sdc.usc.risk.comandos.Estado;
+import gal.sdc.usc.risk.comandos.IComando;
+import gal.sdc.usc.risk.domain.Pais;
+import gal.sdc.usc.risk.excepciones.Errores;
+import gal.sdc.usc.risk.jugar.Partida;
+import gal.sdc.usc.risk.salida.Resultado;
+import gal.sdc.usc.risk.salida.SalidaObjeto;
+
+@Comando(estado = Estado.CUALQUIERA, comando = Comandos.OBTENER_COLOR)
+public class ObtenerColor extends Partida implements IComando {
+  @Override
+  public void ejecutar(String[] comandos) {
+    String clave = comandos[2];
+
+    if (super.getMapa() == null) {
+      Resultado.error(Errores.MAPA_NO_CREADO);
+      return;
+    }
+
+    Pais pais = super.getMapa().getPaisPorNombre(clave);
+    if (pais == null) {
+      Resultado.error(Errores.PAIS_NO_EXISTE);
+      return;
+    }
+
+    SalidaObjeto salida = new SalidaObjeto();
+    salida.put("color", pais.getContinente().getColor().toString());
+    Resultado.correcto(salida);
+  }
+
+  @Override
+  public String ayuda() {
+    return "obtener color <abreviatura_país>";
+  }
+}

@@ -1,163 +1,197 @@
-# Risk
+# Risk — USC Programación Orientada a Objetos
 
-- Diego Barreiro Pérez ([diego.barreiro.perez@rai.usc.es](mailto:diego.barreiro.perez@rai.usc.es))
-- Miguel Bugarín Carreira ([miguel.bugarin@rai.usc.es](mailto:miguel.bugarin@rai.usc.es))
+Implementación académica completa de Risk de Diego Barreiro Pérez y Miguel
+Bugarín Carreira. Conserva las reglas, comandos, mapa, recursos y aspecto JavaFX
+del proyecto original, con una construcción reproducible sobre Java 21, pruebas
+JUnit 5, análisis estático, Docker e integración continua.
 
-> Demo de la Interfaz Gráfica disponible [aquí](https://kodul.ar/lS3zBD)
+![Interfaz gráfica original de Risk](https://i.imgur.com/wXqjwl2.png)
 
-![Ejemplo](https://i.imgur.com/wXqjwl2.png)
+La demostración histórica de la interfaz está disponible
+[aquí](https://kodul.ar/lS3zBD). El PDF y la captura originales se conservan como
+referencia de identidad visual.
 
-> **NOTA:** Para ejecutar el proyecto, se recomienda usar IntelliJ, o utilizar un terminal Linux. Otros entornos, como
-> NetBeans permitirán ejecutarlo (aunque con un mapa más simple), pero otros como CMD y CygWin no soportan ciertos
-> caracteres.
+## Requisitos
 
-**CorreccionRISK**  
-Además, se ha hecho un comparador de salidas para el Risk, disponible en
-[barreeeiroo/CorreccionRISK](https://github.com/barreeeiroo/CorreccionRISK).
+- JDK Eclipse Temurin u otro OpenJDK 21.
+- Maven 3.9.11 o compatible.
+- Docker 29 y Docker Compose v2, solo para los flujos en contenedor.
+- Escritorio con servidor gráfico para JavaFX.
 
-## Juego
+Todo el proyecto, las pruebas y los escenarios trabajan en UTF-8. No es necesario
+descargar JAR manualmente: Maven resuelve JavaFX 21.0.8 y JFoenix.
 
-Para compilar el proyecto, se puede **ejecutar el script `build.sh`** que se encuentra en la raiz del proyecto, el cual
-generará todos bytecodes necesarios, y luego los empaquetará en un JAR disponible dentro de la carpeta `build/`.  
-Para ejecutarlo, basta con escribir `java -jar build/risk.jar`.
+## Inicio rápido nativo
 
+Verificación completa:
+
+```shell
+mvn clean verify
 ```
-./build.sh && java -jar build/risk.jar
+
+Ejecución del escenario CLI canónico incluido en `src/main/resources`:
+
+```shell
+mvn -DskipTests package
+java -jar target/risk-2.0.0-SNAPSHOT-all.jar
 ```
 
-En cuanto a los archivos de comandos, estos se encuentran en el directorio `res/`, a modo de "_resources_" disponibles
-en todo momento.
+La consola procesa `comandos.csv`, muestra la transcripción y escribe
+`resultados.txt`. Para usar recursos externos:
 
-## Estructura del Proyecto
+```shell
+java -Drisk.resources.dir=mi-escenario -Drisk.scenario=comandos.csv \
+  -Drisk.output.dir=salida -jar target/risk-2.0.0-SNAPSHOT-all.jar
+```
 
-El proyecto se compone de los siguientes paquetes:
+Ejecución de la interfaz JavaFX:
 
-* **`gal.sdc.usc.risk.comandos`**: Clases con los comandos y su respectiva ejecución. Todos ellos implementan la interfaz
-`IComando` en el mismo paquete, y se agrupan según su estado en comandos genéricos, ya jugando (partida) y de
-preparación. Los comandos además tienen la anotación `Comando`, en la cual se especifica el estado de la partida en el
-que se puede ejecutar el comando del enum `Estado`, y su respectiva expresión regular que lo lanzará, especificado en
-el enum `Comandos`.  
-Además, en este mismo paquete se encuentra una clase `Ejecutor`. Este ejecutor es el encargado de ejecutar los comandos,
-tal como su nombre indica. Esta clase es una implementación de `Callable`, permitiendo ejecutar las clases como si
-fuesen métodos, y devolver un valor (un `Boolean` en este caso, indicando si hubo éxito o no). El `Ejecutor`, al llamar
-a procesar un comando, creará un nuevo thread y ejecutará el comando ahí. Todos los comandos se ejecutan llamando a su
-método `ejecutar()`.
+```shell
+mvn javafx:run
+```
 
-* **`gal.sdc.usc.risk.excepciones`**: Clases con todas las posibles excepciones. Además, se encuentra el enum `Errores`,
-en el cual se especifican todos los posibles errores y su tipo, con el que se lanzará la respectiva excepción, siempre
-siendo una extensión de la clase abstracta `ExcepcionRISK`.
+## Inicio rápido con Docker
 
-* **`gal.sdc.usc.risk.gui`**: Contiene todo lo relacionado con la interfaz gráfica. _Se explica más abajo._
+```shell
+docker build --target runtime --tag usc-risk:local .
+docker compose run --rm cli
+docker compose run --rm test
+docker compose up --build gui
+```
 
-* **`gal.sdc.usc.risk.jugar`**: En este paquete se encuentran una serie de clases vitales para el desarrollo de la
-partida. Se encuentra la clase de `ComandosDisponibles`, la cual es la encargada de gestionar que comandos se pueden
-ejecutar. En la lista `lista` se encuentran las clases que se permiten ejecutar, y luego están unos métodos para
-gestionar que comandos se activan y desactivan. En la clase `Menu`, es donde tiene lugar la lectura de los comandos, y
-donde luego se redirige al `Ejecutor` para ser procesado. Y en la clase abstracta `Partida` se encuentran todos los
-datos relacionados con la partida, y los métodos para modificarse. Todos los datos almacenados son estáticos,
-para así guardar su estado a lo largo de las múltiples invocaciones, garantizando su unicidad.
+El servicio `cli` ejecuta el escenario determinista como usuario no privilegiado
+y deja `resultados.txt` en `docker-output/`. El servicio `test` ejecuta desde cero
+`mvn clean verify` en Linux. El servicio `gui` publica la misma interfaz JavaFX
+mediante Xvfb, x11vnc y noVNC. Una vez iniciado, se abre en:
 
-* **`gal.sdc.usc.risk.salida`**: Este paquete es el encargado de gestionar las salidas de los resultados de las
-ejecuciones. La interfaz `Consola` y la clase `ConsolaNormal` son las encargadas de sacar los resultados por consola.
-A continuación, `Resultado`, contiene una serie de métodos estáticos que son llamados por los comandos, los cuales
-procesan la información y los imprimen llamando a `Consola`.  
-Las otras cuatro clases son objetos que son válidos para ser impresos. Están inspirados en el paquete `org.json` de Java
-con el que se puede estandarizar una salida. Existen `SalidaDupla` para representar una tupla, `SalidaLista` como
-array de datos, y `SalidaObjeto` como un diccionario de datos con sus claves. `SalidaUtils` es una clase con la que
-se obtiene la representación como string de estos objetos, en caso de haber más de un nivel hasta encontrar una cadena
-de texto.
+<http://localhost:6080/?autoconnect=true&resize=scale>
 
-* **`gal.sdc.usc.risk.tablero`**: Aquí se encuentran todos los objetos de la partida, del "tablero". Está una clase
-abstracta `Carta` (con sus subtipos en el paquete `gal.sdc.usc.risk.tablero.carta`) para las cartas de equipamiento,
-una clase `Celda` con los datos de una casilla del mapa, los objetos `Continente` y `Pais`, el cual utiliza la clase
-`Frontera`. De los jugadores, está la clase base `Jugador`, con sus respectivos datos, y la clase `Mision` indicando
-cuando un jugador puede obtener la victoria. También está la clase de `Ejercito`, que es usada tanto por `Pais` como
-por `Jugador` (en el caso de los paises, se utiliza un constructor tipo _Builder_ para crear un ejército sin color), y
-sus colores en su paquete `gal.sdc.usc.risk.tablero.ejercito`. Y finalmente, la clase `Mapa` viene siendo el tablero de
-juego, almacenando los paises y continentes, principalmente.  
-En cuanto al paquete `gal.sdc.usc.risk.tablero.valores`, aquí se almacena una serie de enums con constantes del juego,
-como los paises y sus posiciones, continentes, misiones, cartas de equipamiento y fronteras marítimas disponibles.
+No requiere plugins del navegador. El contenedor ejecuta tanto JavaFX como el
+servidor gráfico con un usuario no privilegiado; el puerto VNC interno no se
+publica, únicamente el cliente web noVNC. Para detenerlo:
 
-* **`gal.sdc.usc.risk.util`**: Paquete con una serie de utilidades, como la gestión de `Colores` para imprimir por
-consola y del juego, una clase `Dado` para generar números aleatorios del 1 al 6, y una clase de `Recursos` para
-obtener los archivos de la carpeta `res/`.
+```shell
+docker compose down
+```
 
-## Requisitos Parte 2
+Si el puerto 6080 está ocupado, puede elegirse otro sin modificar archivos:
 
-### Jerarquía de cartas
+```shell
+RISK_GUI_PORT=6083 docker compose up --build gui
+```
 
-La clase abstracta `Carta` se encuentra en el paquete `gal.sdc.usc.risk.tablero`, teniendo un constructor tipo
-_Builder_ para facilitar su inicialización. Las cartas se pueden crear mediante
-`new Carta.Builder().withPais(pais).withSubEquipamiento(SubEquipamientos.X).builder()`.  
-Esto creará una instancia de `Carta` con el país y subtipo especificado.
+El enlace se limita deliberadamente a `127.0.0.1`. Para una publicación en
+Internet debe colocarse detrás de un proxy HTTPS con autenticación; noVNC no se
+expone sin protección desde este proyecto.
 
-Esta clase es extendida por las subclases `Infanteria`, `Caballeria` y `Artilleria`, las cuales se encuentran en
-el paquete `gal.sdc.usc.risk.tablero.carta`, siendo también abstractas. Estas clases son extendidas por las
-respectivas subclases en el paquete `gal.sdc.usc.risk.tablero.carta.X`, siendo X el tipo en cuestión. Estos subtipos
-tienen constructores que reciben el país de la carta.
+## Arquitectura
 
-### Jerarquía de ejércitos
+```mermaid
+flowchart LR
+    CLI["adapters.cli"] --> APP["application\nGame, casos de uso y comandos"]
+    FX["adapters.javafx + gui"] --> APP
+    APP --> DOM["domain\nentidades y reglas puras"]
+    CLI --> INF["infrastructure\nrecursos UTF-8 y ficheros"]
+    APP --> PORT["application.port\npuertos de salida"]
+    CLI -. implementa .-> PORT
+    FX -. implementa .-> PORT
+```
 
-La jerarquía especificada de ejércitos se encuentra en el paquete `gal.sdc.usc.risk.tablero`. Ahí dentro se encuentra
-la clase abstracta `Ejercito`, la cual es extendida por las otras subclases. Al igual que con la jerarquía de cartas,
-están en `gal.sdc.usc.risk.tablero.ejercitos`, estando estos en en sus respectivos paquetes.
+- `domain`: mapa, países, continentes, fronteras, jugadores, cartas, ejércitos,
+  misiones y abstracción inyectable de dados. No importa JavaFX, consola ni I/O.
+- `application`: una instancia `Game` por partida, contexto de ejecución acotado,
+  registro tipado de comandos y evaluación de victoria.
+- `adapters.cli`: punto de entrada de consola y presentación textual.
+- `adapters.javafx` y `gui`: punto de entrada y vistas/controladores FXML. Invocan
+  los mismos comandos y casos de uso que la CLI.
+- `infrastructure.resources`: lectura de classpath o directorios externos y salida
+  reproducible en UTF-8.
+- `comandos`, `jugar` y `salida`: fachada de compatibilidad de los comandos
+  públicos originales mientras delegan en la partida y puertos modernos.
 
-Además, aparte de tener `EjercitoBase` y `EjercitoCompuesto`, está también `EjercitoNuevo`, la cual no es abstracta,
-y permite crear un ejército sin color (ya que debido a la implementación de ejércitos, el traspaso siempre es mediante
-otro ejército), haciendo de "basura" de ejércitos o fábrica.
+Cada `Game` contiene su propio mapa, jugadores, cola de turnos, cartas, registro,
+salida y transcripción. `GameContext` solo transporta temporalmente la instancia
+activa y la restaura con `try/finally`; dos partidas pueden ejecutarse en paralelo
+sin compartir estado mutable.
 
-### Excepciones
+## Decisiones de diseño
 
-Las excepciones se encuentran en el paquete `gal.sdc.usc.risk.excepciones`. En ella, se encuentra la clase abstracta
-`ExcepcionRISK`, la cual es la superclase de todas las sub-excepciones. El tipo de excepción es `RuntimeException`, ya
-que así permite no tener que extender mediante `throws`. Las sub-excepciones todas extienden esta clase,
-recibiendo como argumento un elemento del enum `Errores`.  
-Existe el enum `Errores` con los valores constantes de los errores todos, el cual recibe el código de error, el mensaje
-del error y la sub-excepción que lanza. De esta forma, se consigue más versatilidad al estar definidas como constante
-todas las posibles.
+- Se preservó el modelo original y se refactorizó incrementalmente bajo pruebas de
+  caracterización; no se sustituyó por una simulación simplificada.
+- La reflexión mediante `Class.newInstance()` fue reemplazada por factorías
+  registradas y tipadas.
+- La ejecución de comandos es síncrona y no crea pools por comando; la GUI conserva
+  el ciclo de vida de JavaFX y sus callbacks se ejecutan en el hilo llamante.
+- `DiceRoller` permite inyectar secuencias o semillas deterministas.
+- Los builders validan invariantes y lanzan excepciones explícitas; nunca imprimen
+  un error para devolver `null`.
+- Colecciones expuestas por el dominio son copias inmutables cuando corresponde y
+  los objetos de valor implementan conjuntamente `equals` y `hashCode`.
+- El orden observable usa colecciones enlazadas y locale/codificación fijados para
+  que el gold standard sea idéntico en Windows, Linux y Docker.
 
-La gestión de errores tiene lugar en la clase `Ejecutor`, dentro del paquete `gal.sdc.usc.risk.comandos`. Esta clase
-es una extensión del `Callable<Boolean>`, la cual permite "ejecutar" la clase y devolver un booleano (representando
-si la ejecución del comando tuvo éxito o no). La gestión de errores tiene lugar en el `public static void comando`,
-en el cual se intenta obtener el resultado de la ejecución. Los comandos lanzarán las excepciones durante la ejecución,
-y se gestionarán con la excepción `RuntimeException` (la cual extiende a `Exception`), la cual contendrá una serie de
-causas, siendo una de ellas una clase extendida de `ExcepcionRISK`.  
-Cuando esto se alcanza, se manda esta excepción al gestor de errores para escribirlo en el archivo y lanzarlo por
-consola.
+La explicación detallada del cambio está en
+[`docs/MIGRATION.md`](docs/MIGRATION.md) y la línea base original en
+[`docs/BASELINE.md`](docs/BASELINE.md).
 
-### Interfaz _Consola_
+## Pruebas y calidad
 
-La interfaz `Consola` está en el paquete `gal.sdc.usc.risk.jugar`, la cual, además de los requisitos, tiene un método
-con el que imprimir una línea en blanco. La clase `ConsolaNormal` que extiende `Consola` está en el mismo paquete.  
-La clase `Partida` (que contiene todos los datos del juego) tiene una instanca estática de `Consola` con la que se
-puede acceder desde cualquier punto del programa.
+```shell
+mvn test
+mvn verify
+```
 
-## Interfaz Gráfica
+`verify` ejecuta JUnit 5, JaCoCo, Checkstyle, Spotless, SpotBugs y compilación con
+`-Xlint:all -Werror`. El informe navegable queda en
+`target/site/jacoco/index.html`. Los umbrales obligatorios para `domain` y
+`application` son 80 % de líneas y 70 % de ramas; la última verificación local
+alcanza **87,15 % de líneas (739/848) y 81,09 % de ramas (283/349)**.
 
-Para realizar la interfaz gráfica, se ha hecho uso de la librería JavaFX junto con JFoenix para darle un aspecto más
-moderno. Además, también se usa una librería de iconos con la que poder usar Material Design Icons.
+La suite cubre entidades del dominio, dados, cartas, misiones, asignación y turnos,
+ataques, conquista, rearme, canje, condiciones de victoria, errores, parser,
+registro tipado, aislamiento y concurrencia de partidas. La integración ejecuta
+las 110 órdenes de `comandos.csv` y compara exactamente la salida con el
+`goldstandard.txt` canónico. Una prueba adicional valida que el FXML principal y
+sus recursos estén empaquetados y sean XML seguro y bien formado.
 
-### Estructura
+## Añadir funcionalidad
 
-Todo el código se ha estructurado en el paquete **`gal.sdc.usc.risk.gui`**. Aquí dentro se pueden encontrar una serie
-de archivos raíz para la interfaz, como es el controlador principal y dos hojas de estilo. El resto de clases necesarias
-se encuentran en el paquete `componentes`, en el cual destacan los siguientes subpaquetes:
+### Nuevo comando
 
-* `controles`: Controlador de los controles. Gestiona los paneles del lateral derecho con respecto a la información del
-jugador actual, los controles disponibles e introducir manualmente un comando.
+1. Añadir su patrón y estado a `Comandos`.
+2. Implementar `IComando` y anotar la clase con `@Comando`.
+3. Registrar su factoría en `CommandRegistry`.
+4. Añadir pruebas del patrón, estado permitido, salida y códigos de error.
 
-* `info`: Una serie de componentes que crean unos diálogos con información relevante acerca de algún jugador, país o
-continente.
+### Nueva carta
 
-* `mapa`: Contiene todo lo relacionado con el mapa de juego. Necesita una hoja de estilo para funcionar correctamente,
-y se encarga de actualizar las casillas según lo vaya requeriendo el juego.
+1. Añadir el subtipo a `SubEquipamientos` con su tipo y valor.
+2. Implementar la especialización de `Carta` solo si aporta comportamiento.
+3. Incorporarla al mazo creado por el mapa y probar nombre, rearme y canje.
 
-* `modal`: Componente "diálogo". En vez de crear varias instancias de JFXDialog, se crea una única y se cambia su
-contenido dinámicamente, ahorrando mucha memoria. Antes de realizarse de esta forma, se creaban instancias de JFXDialog
-y se sobrecargaba de una forma bastante importante el uso de memoria por parte de Java.
+### Nuevo ejército
 
-* `nuevo`: Contenido de los díalogos de comandos "indirectos". Generan el diseño que se inserta en el diálogo cuando
-se realiza alguna acción para simular la ejecución de algún comando.
+1. Extender la jerarquía correspondiente únicamente si cambia ataque o defensa.
+2. Asociarlo al color en `Ejercito.Builder`.
+3. Probar transferencias, límites y el polimorfismo específico del color.
 
-* `Utils.java`: contiene una serie de utilidades, como refrescar totalmente la pantalla de juego cuando se realicen
-ciertas acciones.
+## Integración continua
+
+`.github/workflows/ci.yml` ejecuta `mvn clean verify` en Ubuntu 24.04 y Windows
+2025, publica el informe JaCoCo, construye las imágenes CLI y GUI, ejecuta ambos
+smoke tests y verifica el servicio Docker de pruebas.
+
+## Limitaciones conocidas
+
+- JFoenix 9.0.10 se mantiene para preservar la identidad de la GUI original. Sus
+  iconos obsoletos se sustituyeron por glifos Unicode compatibles con JavaFX 21.
+- La CI comprueba que JavaFX y noVNC arrancan y que el cliente web responde, pero no
+  automatiza partidas completas mediante interacción gráfica.
+- El editor experimental de mapas del proyecto original continúa deshabilitado en
+  la navegación, tal como estaba en la línea base; el juego, CLI y GUI principal se
+  conservan.
+
+## Licencia
+
+El proyecto mantiene la licencia existente [The Unlicense](LICENSE), reconocible
+por GitHub mediante el archivo `LICENSE` de la raíz.

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- JavaFX inyecta campos @FXML por reflexión después de construir el controlador. -->
+    <Match>
+        <Package name="~gal\.sdc\.usc\.risk\.gui(\..*)?"/>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    </Match>
+    <!-- El agregado Risk mantiene referencias bidireccionales (mapa-país-jugador-frontera)
+         de forma intencionada. Se excluyen únicamente los avisos de representación
+         interna para esas clases de agregado, no el resto de comprobaciones. -->
+    <Match>
+        <Or>
+            <Package name="gal.sdc.usc.risk.domain"/>
+            <Class name="gal.sdc.usc.risk.application.Game"/>
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+    <!-- El evaluador histórico expone DTO mutables por compatibilidad con su API original. -->
+    <Match>
+        <Or>
+            <Package name="gal.sdc.usc.risk.evaluacion"/>
+            <Package name="gal.sdc.usc.risk.correccion"/>
+        </Or>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+    <!-- JavaFX conserva una única escena/controlador por ciclo de vida de Application. -->
+    <Match>
+        <Package name="~gal\.sdc\.usc\.risk\.gui(\..*)?"/>
+        <Bug pattern="MS_EXPOSE_REP,ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+</FindBugsFilter>

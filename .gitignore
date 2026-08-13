@@ -12,7 +12,6 @@
 
 # Package Files #
 *.jar
-!lib/*.jar
 *.war
 *.nar
 *.ear
@@ -37,7 +36,16 @@ nbdist/
 out/
 build/
 dist/
+target/
+.baseline/
 
-res/goldstandard.txt
-res/resultado.txt
-res/resultados.txt
+resultados.txt
+docker-output/
+.docker-cli.out
+.docker-test.out
+.modern-cli.err
+.modern-cli.out
+.scenario-first.txt
+.evaluator.out
+.gui-smoke.err
+.gui-smoke.out

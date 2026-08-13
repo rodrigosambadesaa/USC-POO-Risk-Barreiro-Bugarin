@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.baseline
+target
+build
+dist
+lib
+nbproject
+utils
+*.iml
+*.pdf
+resultados.txt
+.*.out
+.*.err
+.scenario-first.txt

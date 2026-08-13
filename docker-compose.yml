@@ -1,0 +1,28 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    command: ["mvn", "-B", "clean", "verify"]
+
+  cli:
+    build:
+      context: .
+      target: runtime
+    environment:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    volumes:
+      - ./docker-output:/app/output
+
+  gui:
+    build:
+      context: .
+      target: gui
+    ports:
+      - "127.0.0.1:${RISK_GUI_PORT:-6080}:6080"
+    environment:
+      VNC_GEOMETRY: 1440x900
+    shm_size: 256m
+    volumes:
+      - ./docker-output:/app/output
