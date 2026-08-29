@@ -28,9 +28,6 @@ public abstract class Ejercito implements Comparable<Ejercito> {
   }
 
   protected Ejercito(int cantidad, Colores.Color color) {
-    if (cantidad < 0) {
-      throw new IllegalArgumentException("La cantidad de ejércitos no puede ser negativa");
-    }
     this.cantidad = cantidad;
     this.color = color;
   }
@@ -94,6 +91,9 @@ public abstract class Ejercito implements Comparable<Ejercito> {
     }
 
     public Builder withCantidad(int cantidad) {
+      if (cantidad < 0) {
+        throw new IllegalArgumentException("La cantidad de ejércitos no puede ser negativa");
+      }
       this.cantidad = cantidad;
       return this;
     }
