@@ -25,8 +25,12 @@ public enum Misiones {
   }
 
   public static Misiones toMisiones(String id) {
+    if (id == null) {
+      return null;
+    }
+    String valor = id.strip();
     for (Misiones mision : Misiones.values()) {
-      if (id.trim().toUpperCase().endsWith(mision.getId())) {
+      if (valor.equalsIgnoreCase(mision.getId())) {
         return mision;
       }
     }

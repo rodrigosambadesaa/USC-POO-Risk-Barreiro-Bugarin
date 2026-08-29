@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Continente {
   private final Continentes identificador;
@@ -52,42 +51,49 @@ public class Continente {
   }
 
   public HashMap<String, Pais> getPaises() {
-    return this.paises;
+    return new LinkedHashMap<>(this.paises);
   }
 
   public List<Pais> getPaisesPorJugador(Jugador jugador) {
-    return this.paises.values().stream()
-        .filter(pais -> pais.getJugador().equals(jugador))
-        .collect(Collectors.toList());
+    if (jugador == null) {
+      return List.of();
+    }
+    return this.paises.values().stream().filter(pais -> jugador.equals(pais.getJugador())).toList();
   }
 
   public List<Pais> getPaisesFrontera() {
     return this.paises.values().stream()
+        .filter(pais -> pais.getFronteras() != null)
         .filter(
             pais ->
                 pais.getFronteras().getTodas().stream()
-                    .anyMatch(pais1 -> !pais1.getContinente().equals(this)))
-        .collect(Collectors.toList());
+                    .anyMatch(
+                        pais1 -> pais1.getContinente() != null && pais1.getContinente() != this))
+        .toList();
   }
 
   public Integer getNumEjercitos() {
     Integer i = 0;
-    for (Pais pais : this.getPaises().values()) {
+    for (Pais pais : this.paises.values()) {
       i += pais.getEjercito().toInt();
     }
     return i;
   }
 
   public Jugador getJugador() {
-    Jugador jugador = null;
-    for (Pais pais : this.getPaises().values()) {
-      if (jugador == null) {
-        jugador = pais.getJugador();
-      } else if (!jugador.equals(pais.getJugador())) {
+    Jugador propietario = null;
+    for (Pais pais : this.paises.values()) {
+      Jugador actual = pais.getJugador();
+      if (actual == null) {
+        return null;
+      }
+      if (propietario == null) {
+        propietario = actual;
+      } else if (propietario != actual) {
         return null;
       }
     }
-    return jugador;
+    return propietario;
   }
 
   @Override
@@ -144,7 +150,8 @@ public class Continente {
     }
 
     public Builder withPais(Pais pais) {
-      this.paises.put(pais.getAbreviatura(), pais);
+      Pais paisValido = Objects.requireNonNull(pais, "El país del continente es obligatorio");
+      this.paises.put(paisValido.getAbreviatura(), paisValido);
       return this;
     }
 
@@ -158,6 +165,15 @@ public class Continente {
       Objects.requireNonNull(abreviatura, "La abreviatura del continente es obligatoria");
       Objects.requireNonNull(color, "El color del continente es obligatorio");
       Objects.requireNonNull(ejercitosRearme, "El rearme del continente es obligatorio");
+      if (nombre.isBlank()) {
+        throw new IllegalArgumentException("El nombre del continente no puede estar vacío");
+      }
+      if (abreviatura.isBlank()) {
+        throw new IllegalArgumentException("La abreviatura del continente no puede estar vacía");
+      }
+      if (ejercitosRearme < 0) {
+        throw new IllegalArgumentException("El rearme del continente no puede ser negativo");
+      }
       if (paises.isEmpty()) {
         throw new IllegalStateException("El continente debe contener al menos un país");
       }

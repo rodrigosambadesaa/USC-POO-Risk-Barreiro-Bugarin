@@ -10,7 +10,8 @@ public final class Risk {
   private Risk() {}
 
   public static void main(String[] args) {
-    long seed = Long.getLong("risk.seed", 20260813L);
-    Menu.jugar(new Game(new ConsolaNormal(), new Dado(new Random(seed))));
+    Long seed = Long.getLong("risk.seed");
+    Dado dado = seed == null ? new Dado() : new Dado(new Random(seed));
+    Menu.jugar(new Game(new ConsolaNormal(), dado));
   }
 }

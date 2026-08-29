@@ -89,7 +89,7 @@ class VictoryAndCardsTest {
               .withPais(countries.get(index))
               .withSubEquipamiento(equipment.get(index))
               .build();
-      player.getCartas().add(card);
+      player.addCarta(card);
       cardNames.add(card.getNombre());
     }
 

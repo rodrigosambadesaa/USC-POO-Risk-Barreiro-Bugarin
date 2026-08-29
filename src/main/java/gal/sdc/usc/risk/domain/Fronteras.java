@@ -2,6 +2,7 @@ package gal.sdc.usc.risk.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Fronteras {
   private final Pais norte;
@@ -16,7 +17,7 @@ public class Fronteras {
     this.sur = sur;
     this.este = este;
     this.oeste = oeste;
-    this.maritimas = maritimas;
+    this.maritimas = List.copyOf(maritimas);
   }
 
   public Pais getNorte() {
@@ -111,7 +112,7 @@ public class Fronteras {
     }
 
     public Builder withMaritima(Pais maritima) {
-      this.maritimas.add(maritima);
+      this.maritimas.add(Objects.requireNonNull(maritima, "La frontera marítima es obligatoria"));
       return this;
     }
 

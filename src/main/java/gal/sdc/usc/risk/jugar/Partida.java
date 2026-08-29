@@ -64,7 +64,7 @@ public abstract class Partida {
     }
 
     return game.jugadores().values().stream()
-        .filter(jugador -> jugador.getNombre().toLowerCase().equals(nombre.toLowerCase()))
+        .filter(jugador -> jugador.getNombre().equalsIgnoreCase(nombre))
         .findAny()
         .orElse(null);
   }
@@ -90,16 +90,6 @@ public abstract class Partida {
     }
     return jugadores;
   }
-
-  /* protected HashMap<Mision, Jugador> getJugadoresPorMision() {
-      HashMap<Mision, Jugador> jugadores = new HashMap<>();
-      for (Jugador jugador : Partida.jugadores.values()) {
-          if (jugador.getMision() != null) {
-              jugadores.put(jugador.getMision(), jugador);
-          }
-      }
-      return jugadores;
-  } */
 
   protected boolean isJugando() {
     return game.jugando();
@@ -171,34 +161,35 @@ public abstract class Partida {
 
   protected boolean moverTurno() {
     game.conquistado(false);
-    do {
+    int jugadores = game.turnos().size();
+    for (int intento = 0; intento < jugadores; intento++) {
       Jugador jugadorAnterior = game.turnos().poll();
       if (jugadorAnterior == null) {
         return false;
       }
       game.turnos().add(jugadorAnterior);
-    } while (game.turnos().peek().getPaises().size() == 0);
 
-    if (this.isJugando()) {
-      this.comprobacionesTurno();
+      Jugador siguiente = game.turnos().peek();
+      if (siguiente != null && !siguiente.getPaises().isEmpty()) {
+        if (this.isJugando()) {
+          this.comprobacionesTurno();
+        }
+        return true;
+      }
     }
-
-    return true;
+    return false;
   }
 
   protected int calcularEjercitosPendientes(Jugador jugador) {
     int e = 0;
 
     // El jugador recibe el número de ejércitos que es el resultado de dividir el número de países
-    // que
-    // pertenecen al jugador entre 3. Por ejemplo, si un jugador tiene 14 países, al iniciar su
-    // turno
-    // recibe 4 países (el resultado entero de 14/3= 4).
+    // que pertenecen al jugador entre 3. Por ejemplo, si un jugador tiene 14 países, al iniciar su
+    // turno recibe 4 países (el resultado entero de 14/3= 4).
     e += jugador.getPaises().size() / 3;
 
     // Si todos los países de un continente pertenecen a dicho jugador, recibe el número de
-    // ejércitos
-    // indicados en la Tabla 4.
+    // ejércitos indicados en la Tabla 4.
     for (Continente continente : jugador.getContinentes()) {
       e += continente.getEjercitosRearme();
     }
@@ -207,42 +198,27 @@ public abstract class Partida {
   }
 
   protected void comprobacionesTurno() {
-    // Ejércitos que le tocan
-    this.getJugadorTurno()
-        .getEjercitosPendientes()
-        .recibir(
-            new Ejercito.Builder()
-                .withCantidad(this.calcularEjercitosPendientes(this.getJugadorTurno()))
-                .build());
+    int refuerzos = this.calcularEjercitosPendientes(this.getJugadorTurno());
+    if (refuerzos > 0) {
+      this.getJugadorTurno()
+          .getEjercitosPendientes()
+          .recibir(new Ejercito.Builder().withCantidad(refuerzos).build());
+    }
 
-    // Un jugador no puede disponer de más de 6 cartas de equipamiento, en cuyo caso se deberá
-    // realizar un cambio de forma automática, de modo que, si son posibles dos cambios, se elegirá
-    // el que obtiene el mayor número de ejércitos.
+    // Un jugador no puede disponer de más de 6 cartas de equipamiento. En ese caso el cambio se
+    // realiza automáticamente escogiendo la combinación con mayor número de ejércitos.
     if (this.getJugadorTurno().getCartas().size() > 6) {
       Ejecutor.comando("cambiar cartas todas auto");
     }
-
-    // Cuando se cambian las cartas, si el país asociado a la carta es un país que pertenece al
-    // jugador,
-    // se pondrá un ejército adicional en dicho país.
-    /* for (Carta carta : this.getJugadorTurno().getCartas()) {
-        if (carta.getPais().getJugador().equals(this.getJugadorTurno())) {
-            carta.getPais().getEjercito().recibir(new Ejercito(1));
-        }
-    } */
   }
 
   protected Integer getEjercitosIniciales() {
-    int ejercitos = 0;
-    if (this.getJugadores().size() == 3) {
-      ejercitos = 35;
-    } else if (this.getJugadores().size() == 4) {
-      ejercitos = 30;
-    } else if (this.getJugadores().size() == 5) {
-      ejercitos = 25;
-    } else if (this.getJugadores().size() == 6) {
-      ejercitos = 20;
-    }
-    return ejercitos;
+    return switch (this.getJugadores().size()) {
+      case 3 -> 35;
+      case 4 -> 30;
+      case 5 -> 25;
+      case 6 -> 20;
+      default -> 0;
+    };
   }
 }

@@ -18,7 +18,7 @@ RUN mkdir -p /app/output && chown risk:risk /app/output
 COPY --from=build --chown=risk:risk /workspace/target/risk-2.0.0-SNAPSHOT-all.jar /app/risk.jar
 USER risk:risk
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-Duser.language=es", "-Duser.country=ES", "-Drisk.output.dir=/app/output", "-jar", "/app/risk.jar"]
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-Duser.language=es", "-Duser.country=ES", "-Drisk.seed=20260813", "-Drisk.output.dir=/app/output", "-jar", "/app/risk.jar"]
 
 FROM eclipse-temurin:21.0.8_9-jre-jammy AS gui
 RUN apt-get update \

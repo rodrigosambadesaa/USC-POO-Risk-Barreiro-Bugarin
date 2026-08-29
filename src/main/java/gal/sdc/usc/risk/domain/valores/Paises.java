@@ -66,9 +66,13 @@ public enum Paises {
   }
 
   public static Paises toPaises(String pais) {
+    if (pais == null) {
+      return null;
+    }
+    String valor = pais.strip();
     for (Paises paises : Paises.values()) {
-      if (pais.toLowerCase().equals(paises.getNombre().toLowerCase())
-          || pais.toLowerCase().equals(paises.getAbreviatura().toLowerCase())) {
+      if (valor.equalsIgnoreCase(paises.getNombre())
+          || valor.equalsIgnoreCase(paises.getAbreviatura())) {
         return paises;
       }
     }

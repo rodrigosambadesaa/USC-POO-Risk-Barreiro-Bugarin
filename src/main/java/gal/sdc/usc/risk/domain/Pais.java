@@ -74,13 +74,21 @@ public class Pais {
   }
 
   public void setJugador(Jugador jugador) {
-    if (this.jugador != null) {
-      numVecesConquistado += 1;
-      this.jugador.removePais(this);
+    if (this.jugador == jugador) {
+      return;
     }
+
+    Jugador anterior = this.jugador;
+    if (anterior != null) {
+      anterior.removePais(this);
+    }
+
     this.jugador = jugador;
     if (jugador != null) {
       jugador.addPais(this);
+      if (anterior != null) {
+        numVecesConquistado += 1;
+      }
     }
   }
 
