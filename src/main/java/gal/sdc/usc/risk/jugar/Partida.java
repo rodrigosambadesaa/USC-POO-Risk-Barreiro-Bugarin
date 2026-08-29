@@ -198,12 +198,12 @@ public abstract class Partida {
   }
 
   protected void comprobacionesTurno() {
-    this.getJugadorTurno()
-        .getEjercitosPendientes()
-        .recibir(
-            new Ejercito.Builder()
-                .withCantidad(this.calcularEjercitosPendientes(this.getJugadorTurno()))
-                .build());
+    int refuerzos = this.calcularEjercitosPendientes(this.getJugadorTurno());
+    if (refuerzos > 0) {
+      this.getJugadorTurno()
+          .getEjercitosPendientes()
+          .recibir(new Ejercito.Builder().withCantidad(refuerzos).build());
+    }
 
     // Un jugador no puede disponer de más de 6 cartas de equipamiento. En ese caso el cambio se
     // realiza automáticamente escogiendo la combinación con mayor número de ejércitos.
