@@ -9,6 +9,7 @@ import gal.sdc.usc.risk.domain.ejercito.compuesto.EjercitoVerde;
 import gal.sdc.usc.risk.domain.ejercito.compuesto.EjercitoVioleta;
 import gal.sdc.usc.risk.excepciones.Errores;
 import gal.sdc.usc.risk.util.Colores;
+import java.util.Objects;
 
 public abstract class Ejercito implements Comparable<Ejercito> {
   private Integer cantidad;
@@ -27,12 +28,16 @@ public abstract class Ejercito implements Comparable<Ejercito> {
   }
 
   protected Ejercito(int cantidad, Colores.Color color) {
+    if (cantidad < 0) {
+      throw new IllegalArgumentException("La cantidad de ejércitos no puede ser negativa");
+    }
     this.cantidad = cantidad;
     this.color = color;
   }
 
   public Integer recibir(Ejercito ejercito) {
-    return this.recibir(ejercito, ejercito.cantidad);
+    Ejercito origen = Objects.requireNonNull(ejercito, "El ejército de origen es obligatorio");
+    return this.recibir(origen, origen.cantidad);
   }
 
   public Integer recibir(Ejercito ejercito, int cantidad) {
@@ -40,20 +45,22 @@ public abstract class Ejercito implements Comparable<Ejercito> {
   }
 
   public Integer recibir(Ejercito ejercito, int cantidad, boolean auto) {
-    if (cantidad > ejercito.cantidad) {
-      cantidad = ejercito.cantidad;
+    Ejercito origen = Objects.requireNonNull(ejercito, "El ejército de origen es obligatorio");
+    if (cantidad < 0) {
+      throw new IllegalArgumentException("La cantidad de ejércitos no puede ser negativa");
+    }
+    if (cantidad > origen.cantidad) {
+      cantidad = origen.cantidad;
     }
     if (cantidad == 0) {
       if (!auto) {
-        throw java.util.Objects.requireNonNull(Errores.EJERCITO_NO_DISPONIBLE.getExcepcion());
+        throw Objects.requireNonNull(Errores.EJERCITO_NO_DISPONIBLE.getExcepcion());
       }
       return 0;
-    } else if (cantidad < 0) {
-      throw new IllegalArgumentException("La cantidad de ejércitos no puede ser negativa");
     }
 
     this.add(cantidad);
-    ejercito.del(cantidad);
+    origen.del(cantidad);
     return cantidad;
   }
 
