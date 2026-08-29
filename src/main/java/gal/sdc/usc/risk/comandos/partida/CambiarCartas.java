@@ -22,7 +22,7 @@ import java.util.List;
 @Comando(estado = Estado.JUGANDO, comando = Comandos.CAMBIAR_CARTAS)
 public class CambiarCartas extends Partida implements IComando {
   private static int calcularCambios(List<Carta> cartas, Jugador jugador) {
-    int caballeria = 0, infanteria = 0, artilleria = 0; // 10
+    int caballeria = 0, infanteria = 0, artilleria = 0;
     for (Carta cartaT : cartas) {
       if (cartaT.getEquipamiento().equals(Equipamientos.CABALLERIA)) {
         caballeria++;
@@ -138,7 +138,7 @@ public class CambiarCartas extends Partida implements IComando {
       if (cartaT.getPais().getJugador().equals(super.getJugadorTurno())) {
         cartaT.getPais().getEjercito().recibir(new Ejercito.Builder().withCantidad(1).build());
       }
-      super.getJugadorTurno().getCartas().remove(cartaT);
+      super.getJugadorTurno().removeCarta(cartaT);
       super.devolverCarta(cartaT);
     }
 
