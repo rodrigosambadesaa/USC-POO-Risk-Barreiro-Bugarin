@@ -3,6 +3,39 @@
 Todos los cambios relevantes se documentan en este archivo siguiendo una variante
 de Keep a Changelog.
 
+## [Unreleased]
+
+### Añadido
+
+- Pruebas de regresión para propiedad de continentes, conquistas idempotentes,
+  colecciones defensivas, parsers y estados inválidos de ejércitos.
+- Dependabot semanal para Maven, GitHub Actions e imágenes Docker.
+
+### Cambiado
+
+- El dominio encapsula las colecciones de mapas, continentes, fronteras y cartas de
+  jugador en lugar de exponer estado mutable directamente.
+- Los conversores de países, equipamientos, subequipamientos y misiones son
+  nulo-seguros, independientes del locale y más estrictos con los identificadores.
+- La CLI usa dados aleatorios por defecto; `risk.seed` conserva ejecuciones
+  reproducibles y el contenedor canónico fija la semilla de regresión.
+- La CI cancela ejecuciones obsoletas, limita tiempos máximos y evita persistir las
+  credenciales de `checkout`.
+- La lectura de escenarios usa `try` con recursos y normaliza espacios exteriores.
+- El lanzador JavaFX deja de configurar Swing, que no intervenía en la interfaz.
+
+### Corregido
+
+- Un continente ya no se considera propiedad de un jugador mientras alguno de sus
+  países siga sin asignar.
+- Reasignar un país al mismo jugador o liberarlo ya no incrementa falsamente su
+  contador de conquistas.
+- La rotación de turnos deja de poder entrar en un bucle infinito si no existe un
+  jugador activo y los turnos con cero refuerzos ya no generan una excepción.
+- Los ejércitos ya no pueden construirse ni transferirse con cantidades negativas.
+- Los builders de mapa ya no comparten sus colecciones con instancias construidas
+  y detectan celdas o continentes duplicados.
+
 ## [2.0.0] - 2026-08-13
 
 ### Añadido
