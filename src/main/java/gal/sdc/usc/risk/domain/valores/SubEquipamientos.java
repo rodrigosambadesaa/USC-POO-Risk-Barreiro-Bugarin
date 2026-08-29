@@ -19,8 +19,12 @@ public enum SubEquipamientos {
   }
 
   public static SubEquipamientos toSubEquipamientos(String subEquipamiento) {
+    if (subEquipamiento == null) {
+      return null;
+    }
+    String valor = subEquipamiento.strip();
     for (SubEquipamientos equipamientos : SubEquipamientos.values()) {
-      if (subEquipamiento.toLowerCase().equals(equipamientos.getNombre().toLowerCase())) {
+      if (valor.equalsIgnoreCase(equipamientos.getNombre())) {
         return equipamientos;
       }
     }
