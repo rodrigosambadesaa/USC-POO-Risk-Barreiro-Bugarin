@@ -126,6 +126,24 @@ class DomainModelTest {
   }
 
   @Test
+  void mapaNoComparteColeccionesConBuilderNiGetters() {
+    Pais alaska = country(Paises.ALASKA);
+    Pais alberta = country(Paises.ALBERTA);
+    Mapa.Builder builder = new Mapa.Builder().withPais(alaska);
+    Mapa mapa = builder.build(true);
+
+    builder.withPais(alberta);
+    mapa.getPaisesPorCeldas().clear();
+
+    assertEquals(1, mapa.getPaisesPorCeldas().size());
+    assertEquals(alaska, mapa.getPaisPorNombre(" ALASKA ".strip()));
+    assertTrue(mapa.getPaisesPorJugador(null).isEmpty());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new Mapa.Builder().withPais(alaska).withPais(country(Paises.ALASKA)));
+  }
+
+  @Test
   void conversoresDeDominioSonEstrictosNulosYNoDependenDelLocale() {
     assertEquals(Paises.ALASKA, Paises.toPaises(" alaska "));
     assertEquals(Paises.GROELANDIA, Paises.toPaises("GROENLAN"));
