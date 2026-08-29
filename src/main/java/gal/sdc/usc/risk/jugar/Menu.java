@@ -16,19 +16,17 @@ public class Menu extends Partida {
   }
 
   private Menu() {
-    // Iniciar juego
     String orden;
-
     boolean hayFichero = false;
     boolean primero = true;
 
-    try {
-      BufferedReader bufferLector;
-      bufferLector = ResourceStore.reader(System.getProperty("risk.scenario", "comandos.csv"));
+    try (BufferedReader bufferLector =
+        ResourceStore.reader(System.getProperty("risk.scenario", "comandos.csv"))) {
       hayFichero = true;
 
       while ((orden = bufferLector.readLine()) != null) {
-        if (orden.startsWith("#") || orden.startsWith("//") || orden.isEmpty()) {
+        orden = orden.strip();
+        if (orden.isEmpty() || orden.startsWith("#") || orden.startsWith("//")) {
           continue;
         }
 
@@ -43,7 +41,6 @@ public class Menu extends Partida {
 
         Ejecutor.comando(orden);
       }
-      bufferLector.close();
     } catch (IOException e) {
       System.err.println("Archivo de comandos no encontrado, usando consola: " + e.getMessage());
     }
