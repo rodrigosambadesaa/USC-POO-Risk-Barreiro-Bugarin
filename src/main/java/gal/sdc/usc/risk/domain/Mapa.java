@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class Mapa {
   public static final int MAX_PAISES_X = 11;
@@ -25,16 +25,16 @@ public class Mapa {
   private boolean tieneFronteras = false;
 
   private Mapa(HashMap<String, Continente> continentes, HashMap<Celda, Pais> paises) {
-    this.continentes = continentes;
-    this.paises = paises;
+    this.continentes = new LinkedHashMap<>(continentes);
+    this.paises = new LinkedHashMap<>(paises);
   }
 
   public HashMap<String, Continente> getContinentes() {
-    return continentes;
+    return new LinkedHashMap<>(continentes);
   }
 
   public HashMap<Celda, Pais> getPaisesPorCeldas() {
-    return paises;
+    return new LinkedHashMap<>(paises);
   }
 
   public Pais getPaisPorNombre(String nombre) {
@@ -45,8 +45,8 @@ public class Mapa {
     return this.paises.values().stream()
         .filter(
             pais ->
-                pais.getAbreviatura().toLowerCase().equals(nombre.toLowerCase())
-                    || pais.getNombre().toLowerCase().equals(nombre.toLowerCase()))
+                pais.getAbreviatura().equalsIgnoreCase(nombre)
+                    || pais.getNombre().equalsIgnoreCase(nombre))
         .findAny()
         .orElse(null);
   }
@@ -59,26 +59,29 @@ public class Mapa {
     return this.continentes.values().stream()
         .filter(
             continente ->
-                continente.getAbreviatura().toLowerCase().equals(nombre.toLowerCase())
-                    || continente.getNombre().toLowerCase().equals(nombre.toLowerCase()))
+                continente.getAbreviatura().equalsIgnoreCase(nombre)
+                    || continente.getNombre().equalsIgnoreCase(nombre))
         .findAny()
         .orElse(null);
   }
 
   public List<Continente> getContinentesPorJugador(Jugador jugador) {
-    List<Continente> continentes = new ArrayList<>();
-    for (Continente continente : this.getContinentes().values()) {
+    List<Continente> resultado = new ArrayList<>();
+    for (Continente continente : this.continentes.values()) {
       if (continente.getJugador() != null && continente.getJugador().equals(jugador)) {
-        continentes.add(continente);
+        resultado.add(continente);
       }
     }
-    return continentes;
+    return resultado;
   }
 
   public List<Pais> getPaisesPorJugador(Jugador jugador) {
+    if (jugador == null) {
+      return List.of();
+    }
     return this.paises.values().stream()
         .filter(pais -> jugador.equals(pais.getJugador()))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private void asignarFronteras() {
@@ -107,11 +110,11 @@ public class Mapa {
           preFronteras.withSur(aux);
         }
         aux = this.paises.get(celda.getEste());
-        if (this.paises.get(celda.getEste()) != null) {
+        if (aux != null) {
           preFronteras.withEste(aux);
         }
         aux = this.paises.get(celda.getOeste());
-        if (this.paises.get(celda.getOeste()) != null) {
+        if (aux != null) {
           preFronteras.withOeste(aux);
         }
 
@@ -124,7 +127,8 @@ public class Mapa {
         }
 
         if (!pais.setFronteras(preFronteras.build())) {
-          System.err.println("El país " + pais.getNombre() + " ya tenía fronteras asignadas!");
+          throw new IllegalStateException(
+              "El país " + pais.getNombre() + " ya tenía fronteras asignadas");
         }
       }
     }
@@ -295,12 +299,20 @@ public class Mapa {
     }
 
     public Builder withContinente(Continente continente) {
-      this.continentes.put(continente.getNombre(), continente);
+      Continente valor = Objects.requireNonNull(continente, "El continente es obligatorio");
+      Continente anterior = this.continentes.putIfAbsent(valor.getNombre(), valor);
+      if (anterior != null && anterior != valor) {
+        throw new IllegalArgumentException("Continente duplicado: " + valor.getNombre());
+      }
       return this;
     }
 
     public Builder withPais(Pais pais) {
-      this.paises.put(pais.getCelda(), pais);
+      Pais valor = Objects.requireNonNull(pais, "El país es obligatorio");
+      Pais anterior = this.paises.putIfAbsent(valor.getCelda(), valor);
+      if (anterior != null && anterior != valor) {
+        throw new IllegalArgumentException("Celda de país duplicada: " + valor.getCelda());
+      }
       return this;
     }
 
