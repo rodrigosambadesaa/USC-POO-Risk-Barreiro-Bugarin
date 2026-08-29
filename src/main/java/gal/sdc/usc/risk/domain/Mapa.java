@@ -79,9 +79,7 @@ public class Mapa {
     if (jugador == null) {
       return List.of();
     }
-    return this.paises.values().stream()
-        .filter(pais -> jugador.equals(pais.getJugador()))
-        .toList();
+    return this.paises.values().stream().filter(pais -> jugador.equals(pais.getJugador())).toList();
   }
 
   private void asignarFronteras() {
