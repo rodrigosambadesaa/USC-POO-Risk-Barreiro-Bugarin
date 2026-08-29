@@ -58,9 +58,7 @@ public class Continente {
     if (jugador == null) {
       return List.of();
     }
-    return this.paises.values().stream()
-        .filter(pais -> jugador.equals(pais.getJugador()))
-        .toList();
+    return this.paises.values().stream().filter(pais -> jugador.equals(pais.getJugador())).toList();
   }
 
   public List<Pais> getPaisesFrontera() {
@@ -70,8 +68,7 @@ public class Continente {
             pais ->
                 pais.getFronteras().getTodas().stream()
                     .anyMatch(
-                        pais1 ->
-                            pais1.getContinente() != null && pais1.getContinente() != this))
+                        pais1 -> pais1.getContinente() != null && pais1.getContinente() != this))
         .toList();
   }
 
