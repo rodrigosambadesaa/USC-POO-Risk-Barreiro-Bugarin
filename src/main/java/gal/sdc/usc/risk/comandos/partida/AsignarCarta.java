@@ -43,7 +43,7 @@ public class AsignarCarta extends Partida implements IComando {
     }
 
     super.getComandos().cartaEscogida();
-    super.getJugadorTurno().getCartas().add(carta);
+    super.getJugadorTurno().addCarta(carta);
 
     SalidaObjeto salida = new SalidaObjeto();
     salida.put("tipoCarta", carta.getSubEquipamiento().getNombre());
