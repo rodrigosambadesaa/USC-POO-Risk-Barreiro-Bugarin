@@ -65,11 +65,22 @@ public class Jugador {
   }
 
   public List<Carta> getCartas() {
-    return cartas;
+    return List.copyOf(cartas);
+  }
+
+  public void addCarta(Carta carta) {
+    Carta cartaValida = Objects.requireNonNull(carta, "La carta es obligatoria");
+    if (!cartas.contains(cartaValida)) {
+      cartas.add(cartaValida);
+    }
+  }
+
+  public boolean removeCarta(Carta carta) {
+    return cartas.remove(Objects.requireNonNull(carta, "La carta es obligatoria"));
   }
 
   public Carta getCarta(SubEquipamientos subEquipamiento, Pais pais) {
-    for (Carta carta : this.getCartas()) {
+    for (Carta carta : this.cartas) {
       if (carta.getSubEquipamiento().equals(subEquipamiento) && carta.getPais().equals(pais)) {
         return carta;
       }
@@ -78,16 +89,17 @@ public class Jugador {
   }
 
   public Integer getNumEjercitos() {
-    Integer i = 0;
-    for (Pais pais : this.getPaises()) {
+    int i = 0;
+    for (Pais pais : this.paises) {
       i += pais.getEjercito().toInt();
     }
     return i;
   }
 
   public boolean setMision(Mision mision) {
+    Mision misionValida = Objects.requireNonNull(mision, "La misión es obligatoria");
     if (this.mision == null) {
-      this.mision = mision;
+      this.mision = misionValida;
       return true;
     }
     return false;
