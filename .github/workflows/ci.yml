@@ -11,6 +11,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  JAVA_TOOL_OPTIONS: -XX:-UseBASE64Intrinsics
+
 jobs:
   verify:
     timeout-minutes: 20
@@ -30,6 +33,12 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+      - name: Verify Java4Shell mitigation on both CI operating systems
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -XX:+PrintFlagsFinal -version 2>&1 | grep -E 'UseBASE64Intrinsics[[:space:]]+=[[:space:]]+false'
+
       - name: Maven verify (UTF-8)
         run: mvn -B clean verify
       - name: Publish coverage report
@@ -47,7 +56,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Build runtime image
-        run: docker build --target runtime --tag usc-risk:ci .
+        run: docker build --pull --target runtime --tag usc-risk:ci .
+      - name: Verify Java4Shell mitigation in CLI image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint java usc-risk:ci -XX:+PrintFlagsFinal -version 2>&1 \
+            | grep -E 'UseBASE64Intrinsics[[:space:]]+=[[:space:]]+false'
       - name: CLI smoke test
         run: |
           install -d -m 0777 docker-output
@@ -56,7 +71,13 @@ jobs:
       - name: Verify test service
         run: docker compose run --rm test
       - name: Build web GUI image
-        run: docker build --target gui --tag usc-risk-gui:ci .
+        run: docker build --pull --target gui --tag usc-risk-gui:ci .
+      - name: Verify Java4Shell mitigation in GUI image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint java usc-risk-gui:ci -XX:+PrintFlagsFinal -version 2>&1 \
+            | grep -E 'UseBASE64Intrinsics[[:space:]]+=[[:space:]]+false'
       - name: Web GUI smoke test
         shell: bash
         run: |
