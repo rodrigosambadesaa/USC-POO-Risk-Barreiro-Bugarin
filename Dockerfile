@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.7
 FROM maven:3.9.11-eclipse-temurin-21-alpine AS build
+# CVE-2026-114938: mitigate the vulnerable Base64 intrinsic in Maven/JDK tooling.
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 WORKDIR /workspace
 COPY pom.xml ./
 COPY config ./config
@@ -11,7 +13,9 @@ RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests dependency:copy-depen
 FROM build AS test
 CMD ["mvn", "-B", "clean", "verify"]
 
-FROM eclipse-temurin:21.0.8_9-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine AS runtime
+# Use the newest Java 21 vendor updates on --pull rebuilds.
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 RUN addgroup -S risk && adduser -S -G risk -h /app risk
 WORKDIR /app
 RUN mkdir -p /app/output && chown risk:risk /app/output
@@ -20,7 +24,9 @@ USER risk:risk
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "-Duser.language=es", "-Duser.country=ES", "-Drisk.seed=20260813", "-Drisk.output.dir=/app/output", "-jar", "/app/risk.jar"]
 
-FROM eclipse-temurin:21.0.8_9-jre-jammy AS gui
+FROM eclipse-temurin:21-jre-jammy AS gui
+# CVE-2026-114938: mitigate the running GUI JVM too.
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
         curl \
